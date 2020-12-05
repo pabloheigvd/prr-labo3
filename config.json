@@ -1,0 +1,18 @@
+{
+  "NbProcess": 2,
+  "trace": false,
+  "debug": false,
+  "nodes": [
+    {
+      "no": "p0",
+      "adr": "127.0.0.1",
+      "noPort": 8100
+    },
+    {
+      "no": "p1",
+      "adr": "127.0.0.1",
+      "noPort": 8101
+    }
+  ]
+
+}
