@@ -1,3 +1,9 @@
+/*
+ * Work: 	PRR-labo3
+ * Author: 	Pablo Mercado
+ * File: 	Election.go
+ */
+
 package Entities
 
 import "time"

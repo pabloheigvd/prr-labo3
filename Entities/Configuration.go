@@ -1,3 +1,9 @@
+/*
+ * Work: 	PRR-labo3
+ * Author: 	Pablo Mercado
+ * File: 	Configuration.go
+ */
+
 package Entities
 
 type Configuration struct {

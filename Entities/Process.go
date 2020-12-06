@@ -1,3 +1,9 @@
+/*
+ * Work: 	PRR-labo3
+ * Author: 	Pablo Mercado
+ * File: 	Process.go
+ */
+
 package Entities
 
 import (
