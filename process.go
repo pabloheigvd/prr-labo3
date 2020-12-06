@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"prr-labo3/Communication"
 	"prr-labo3/Entities"
 	"prr-labo3/Utils"
 	"strconv"
@@ -64,7 +65,7 @@ func main(){
 	 * Verifying configuration argument
 	 */
 	if configuration.NbProcess <= processId {
-		errMsg := "You need to start a configuration between 0 and " +
+		errMsg := "Error: process id is not between 0 and " +
 			strconv.Itoa(configuration.NbProcess)
 		fmt.Println(errMsg)
 		fmt.Println(EXIT_MSG)
@@ -88,23 +89,47 @@ func main(){
 		Elu: -1, // no one is elected at first
 	}
 
-	fmt.Print(election)
+	log.Print("Etat initial:")
+	log.Print(election)
 
 	// traitement d'une réception à la fois
 	// go routine, for select pour ne traiter qu'un seul msg à la fois
-
-	// Prise de connaissance des aptitudes des autres processus
-
+	go Communication.Listen()
 
 	// demarrage des elections
+	// Lorsqu’il démarre, il ne participe pas à une éventuelle élection
+	// qui aurait pu débuter avant son démarrage. Il lance ensuite une élection.
 	/*
 	boucle sans fin sur les réceptions de
 	- [enCours = faux] élection: demande élection
 	- [enCours = faux] getElu // attente fin élection
 	- MESSAGE(i,apti) // réception aptitude
-	- Timeout // fin d élection
+	- timeout // fin d élection
 	fin boucle
 	 */
+	// timeouts: https://gobyexample.com/timeouts
+	// Une élection dure au maximum 3T.
+	//electionMaxDuration := 3 * election.T
+	//Collecte les aptitudes des processus pendant une durée de 2T
+	//aptitudeCollectionMaxDuration := 2 * election.T
+
+	bully := Entities.BullyImpl{}
+	bully.InitBully(election, configuration.Processes)
+
+	for {
+		bully.Election()
+		_ = bully.GetElu()
+
+		// FIXME move?
+		//fmt.Print(elu)
+		//select {
+		//	case <- time.After(electionMaxDuration):
+		//		log.Println("timeout")
+		//		// Algorithm.Timeout()
+		//		// election.EnCours = false
+		//		break
+		//}
+	}
 }
 
 /* FIXME remove

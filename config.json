@@ -11,7 +11,7 @@
     },
     {
       "no": 1,
-      "initialAptitude": 0,
+      "initialAptitude": 10,
       "adr": "127.0.0.1",
       "noPort": 8101
     }
