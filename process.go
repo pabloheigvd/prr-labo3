@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"prr-labo3/Entities"
 	"prr-labo3/Utils"
-	_ "prr-labo3/Utils"
 	"strconv"
 	"time"
 )
@@ -14,6 +14,7 @@ const LOG_DIRECTORY_NAME = "logs"
 const LOG_FILE_PREFIX = "log"
 const SLOWDOWN_DEBUG_DURATION = 8 * time.Second
 const EXIT_MSG = "exiting..."
+const TRANSMISSION_MAX_DURATION = 2 * time.Second
 
 func main(){
 	if len(os.Args) < 2 {
@@ -21,7 +22,11 @@ func main(){
 		os.Exit(0)
 	}
 
-	var processId, _ = strconv.Atoi(os.Args[1])
+	// Chaque processus devra pouvoir être démarré avec son numéro en paramètre
+	var processId, err = strconv.Atoi(os.Args[1])
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	log.Print(processId)
 	var configuration, _ = Utils.Parsing()
@@ -68,4 +73,58 @@ func main(){
 		os.Exit(0)
 	}
 
+	apts := make([]int, configuration.NbProcess) // array declaration
+	for i, process := range configuration.Processes {
+		apts[i] = process.InitialAptitude
+	}
+
+	election := Entities.Election{
+		N: configuration.NbProcess,
+		Moi: processId,
+		MonApt: configuration.Processes[processId].InitialAptitude,
+		Apts: apts,
+		T: TRANSMISSION_MAX_DURATION,
+		EnCours: false,
+		Elu: -1, // no one is elected at first
+	}
+
+	fmt.Print(election)
+
+	// traitement d'une réception à la fois
+	// go routine, for select pour ne traiter qu'un seul msg à la fois
+
+	// Prise de connaissance des aptitudes des autres processus
+
+
+	// demarrage des elections
+	/*
+	boucle sans fin sur les réceptions de
+	- [enCours = faux] élection: demande élection
+	- [enCours = faux] getElu // attente fin élection
+	- MESSAGE(i,apti) // réception aptitude
+	- Timeout // fin d élection
+	fin boucle
+	 */
 }
+
+/* FIXME remove
+for {
+		fmt.Print("Please intialize my aptitude: ")
+		reader := bufio.NewReader(os.Stdin)
+		input, err := reader.ReadString('\n')
+		log.Print("read: " + input)
+		if err != nil {
+			log.Print(err)
+			continue
+		} else {
+			input = input[:len(input) - 1] // shave '\n'
+			election.MonApt, err = strconv.Atoi(input)
+			log.Print(election)
+			if err != nil {
+				log.Print(err)
+				continue
+			}
+			break
+		}
+	}
+ */
