@@ -4,7 +4,7 @@
  * File: 	Bully.go
  */
 
-package _interface
+package Interface
 
 type Bully interface {
 	Election()

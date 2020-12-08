@@ -98,9 +98,11 @@ func main(){
 	log.Print("Etat initial:")
 	log.Print(election)
 
+	moiP := election.GetProcess(configuration.Processes)
+
 	// traitement d'une réception à la fois
 	// go routine, for select pour ne traiter qu'un seul msg à la fois
-	go Communication.Listen()
+	go Communication.ListenToRemoteMessage(moiP)
 
 	// demarrage des elections
 	// Lorsqu’il démarre, il ne participe pas à une éventuelle élection
@@ -122,20 +124,7 @@ func main(){
 	bully := Entities.BullyImpl{}
 	bully.InitBully(election, configuration.Processes)
 
-	for {
-		bully.Election()
-		_ = bully.GetElu()
-
-		// FIXME move?
-		//fmt.Print(elu)
-		//select {
-		//	case <- time.After(electionMaxDuration):
-		//		log.Println("timeout")
-		//		// Algorithm.Timeout()
-		//		// election.EnCours = false
-		//		break
-		//}
-	}
+	Communication.ReadUserInput(bully)
 }
 
 /* FIXME remove

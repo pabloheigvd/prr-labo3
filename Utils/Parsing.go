@@ -40,5 +40,18 @@ func Parsing() (Entities.Configuration, error){
 	return processes, nil
 }
 
+func ParseUserInput(userInput string) {
+	userInput = trimBN(userInput)
+	switch userInput {
+		case "e":
+		break
+	}
+}
+
+// trimBN enlève '\n'
+func trimBN(input string) string {
+	return input[:len(input)-1]
+}
+
 
 
