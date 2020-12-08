@@ -7,6 +7,7 @@
 package Utils
 
 import (
+	"bufio"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -16,7 +17,10 @@ import (
 
 const CONFIG_FILE_PATH = "./config.json"
 
-func Parsing() (Entities.Configuration, error){
+var userIo = bufio.NewReader(os.Stdin)
+
+// Parsing of the configuration file
+func Parsing() (Entities.Configuration){
 	log.Print("Opening configuration file: " + CONFIG_FILE_PATH)
 	jsonFile, err := os.Open(CONFIG_FILE_PATH)
 	if err != nil {
@@ -24,28 +28,29 @@ func Parsing() (Entities.Configuration, error){
 		log.Fatal(err)
 	}
 
-	// read our opened xmlFile as a byte array.
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
-	var processes Entities.Configuration
-	json.Unmarshal(byteValue, &processes)
+	var configuration Entities.Configuration
+	json.Unmarshal(byteValue, &configuration)
 	err = jsonFile.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Print("Unmarshalled json:")
-	log.Print(processes)
+	log.Print("Configuration (raw):")
+	log.Print(configuration)
 
-	return processes, nil
+	return configuration
 }
 
-func ParseUserInput(userInput string) {
-	userInput = trimBN(userInput)
-	switch userInput {
-		case "e":
-		break
-	}
+// GetUserInput bloquant
+func GetUserInput() (string, error) {
+	return userIo.ReadString('\n')
+}
+
+// ParseUserInput clean user input by trimming
+func ParseUserInput(userInput string) string {
+	return trimBN(userInput)
 }
 
 // trimBN enlève '\n'

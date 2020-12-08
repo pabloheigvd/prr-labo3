@@ -9,19 +9,21 @@ package Communication
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"log"
 	"net"
-	"os"
 	"prr-labo3/Entities"
-	"prr-labo3/interface"
+	"prr-labo3/Utils"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const TRANSPORT_PROTOCOL = "udp"
 
 var (
-	userIo          = bufio.NewReader(os.Stdin)
+	bullyImpl		Entities.BullyImpl
+	t				time.Duration
 	electionChannel = make(chan struct{})
 	getEluChannel   = make(chan struct{})
 	messageChannel  = make(chan string)
@@ -30,6 +32,12 @@ var (
 /* ==============
  * === Public ===
  * =========== */
+
+// Init
+func Init(bi Entities.BullyImpl, tt time.Duration){
+	bullyImpl = bi
+	t = tt
+}
 
 // ListenToRemoteMessage from other process
 func ListenToRemoteMessage(moiP Entities.Process){
@@ -48,49 +56,84 @@ func ListenToRemoteMessage(moiP Entities.Process){
 		}
 		msg := bufio.NewScanner(bytes.NewReader(buf[0:n]))
 		for msg.Scan() {
-			msg := msg.Text() + " from " + cliAddr.String() + "\n"
-			log.Print("Received: " + msg)
+			msg := msg.Text()
+			log.Print("Received: " + msg + " from " + cliAddr.String() + "\n")
 			messageChannel <- msg
 		}
 	}
 }
 
 // ReadUserInput to userInput
-func ReadUserInput(bully Interface.Bully) {
+func ReadUserInput() {
 
 	// Déclencher une élection au démarrage du processus
-	bully.Election()
+	bullyImpl.Election()
 
 	eCmd := Entities.ElectionCmd{}
 	gCmd := Entities.GetEluCmd{}
 
 	for {
-		userInput, err := getUserInput() // bloquant
+		userInput, err := Utils.GetUserInput() // bloquant
 		if err != nil {
 			log.Fatal(err)
 		}
 
+		userInput = Utils.ParseUserInput(userInput)
+		log.Print()
+
 		if eCmd.Match(userInput) {
 			electionChannel <- struct{}{}
-		}
-
-		if gCmd.Match(userInput) {
+		} else if gCmd.Match(userInput) {
 			getEluChannel <- struct{}{}
+		} else {
+			// aptitude
+			monApt, err := strconv.Atoi(userInput)
+			if err != nil {
+				log.Fatal(err)
+			}
+			bullyImpl.SetMonApt(monApt)
 		}
-		//bully.Election()
-		//_ = bully.GetElu()
+	}
+}
 
-		// select sur Election et GetElu?
+// HandleCommunication
+func HandleCommunication() {
 
-		// FIXME move?
-		//fmt.Print(elu)
-		//select {
-		//	case <- time.After(electionMaxDuration):
-		//		log.Println("timeout")
-		//		// Algorithm.Timeout()
-		//		// election.EnCours = false
-		//		break
-		//}
+	electionDuration := 2*t
+	log.Print("Election results are known after " + electionDuration.String())
+
+	timer := time.NewTicker(electionDuration)
+	log.Print("Election initial demaree")
+
+	for {
+		select {
+		case <- electionChannel:
+			fmt.Print("Lancement d'une nouvelle election")
+			bullyImpl.Election()
+			timer.Stop()
+			timer = time.NewTicker(electionDuration)
+			break
+		case <- getEluChannel:
+			log.Print("L'utilisateur veut connaitre l'elu")
+			elu := bullyImpl.GetElu()
+			fmt.Println("Le processus " + strconv.Itoa(elu) + " est l'elu!")
+			break
+		case msg := <-messageChannel:
+			processId, apt := handleMessage(msg)
+
+			if !bullyImpl.EnCours() {
+				log.Print("Election lancee apres reception de MESSAGE(pid, apt)")
+				bullyImpl.Election()
+			}
+			bullyImpl.SetApt(processId, apt)
+			break
+			case <- timer.C: // timeout
+			log.Print("Timeout! Fin de l'election")
+			bullyImpl.Timeout()
+			break
+		default:
+			break
+		}
 	}
 }
 
@@ -98,45 +141,25 @@ func ReadUserInput(bully Interface.Bully) {
  * === private ===
  * =============*/
 
-// getUserInput bloquant
-func getUserInput() (string, error) {
-	return userIo.ReadString('\n')
-}
-
-// handleCommunication
-func handleCommunication() {
-	for {
-		select {
-			case <- electionChannel:
-				log.Print("Lancement d'une nouvelle election")
-				break
-			case <- getEluChannel:
-				log.Print("L'utilisateur veut connaitre l'elu")
-				break
-			case msg := <-messageChannel:
-				_, _ = handleMessage(msg)
-				// TODO maj election
-				break
-			default:
-				break
-		}
-	}
-}
-
 // handleMessage aptitude
 func handleMessage(msg string) (int, int){
 	log.Print("Received: " + msg)
 	tokens := strings.Split(msg, " ")
-	if len(tokens) < 2 {
+	if len(tokens) < 3 {
 		log.Fatal("Invalid message received")
 	}
 
-	processId, err := strconv.Atoi(tokens[0])
+	msgType := tokens[0]
+	if msgType != "MESSAGE"{
+		log.Fatal("Unknown message type: " + msgType)
+	}
+
+	processId, err := strconv.Atoi(tokens[1])
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Print("received process id: " + strconv.Itoa(processId))
-	aptitude, err := strconv.Atoi(tokens[1])
+	aptitude, err := strconv.Atoi(tokens[2])
 	if err != nil {
 		log.Fatal(err)
 	}
