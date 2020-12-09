@@ -1,4 +1,6 @@
-# prr-labo3
+# Labo 3
+
+La durée de transmission T est défini := 1.5s
 
 # Test seul
 Un test manuel est de lancer un processus et de voir voir si le message annonçant le résultat de l'élection intial correspond à quoi on s'attend.
