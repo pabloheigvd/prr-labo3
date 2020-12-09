@@ -15,7 +15,7 @@ import (
 	"prr-labo3/Entities"
 )
 
-const CONFIG_FILE_PATH = "./config.json"
+const CONFIG_FILE_PATH = "./configs/config.json"
 
 var userIo = bufio.NewReader(os.Stdin)
 

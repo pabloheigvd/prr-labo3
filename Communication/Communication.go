@@ -63,7 +63,7 @@ func ListenToRemoteMessage(moiP Entities.Process){
 	}
 }
 
-// ReadUserInput to userInput
+// ReadUserInput boucle infinie lisant les inputs de l'utilisateur
 func ReadUserInput() {
 
 	// Déclencher une élection au démarrage du processus
@@ -96,11 +96,13 @@ func ReadUserInput() {
 	}
 }
 
-// HandleCommunication
+// HandleCommunication boucle infinie modifiant les données critiques de l'élection
 func HandleCommunication() {
 
 	electionDuration := 2*t
 	log.Print("Election results are known after " + electionDuration.String())
+
+	initialElection := true
 
 	timer := time.NewTicker(electionDuration)
 	log.Print("Election initial demaree")
@@ -130,6 +132,15 @@ func HandleCommunication() {
 			case <- timer.C: // timeout
 			log.Print("Timeout! Fin de l'election")
 			bullyImpl.Timeout()
+
+			if initialElection {
+				initialElection = false
+				fmt.Println("Fin de l'election initial")
+				elu := bullyImpl.GetElu()
+
+				fmt.Println("L'elu de l'election initiale est le processus: " +
+					strconv.Itoa(elu))
+			}
 			break
 		default:
 			break

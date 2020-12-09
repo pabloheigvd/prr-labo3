@@ -21,7 +21,7 @@ const LOG_DIRECTORY_NAME = "logs"
 const LOG_FILE_PREFIX = "log"
 const SLOWDOWN_DEBUG_DURATION = 5 * time.Second
 const EXIT_MSG = "exiting..."
-const TRANSMISSION_MAX_DURATION = 2000 * time.Millisecond
+const TRANSMISSION_MAX_DURATION = 1500 * time.Millisecond
 
 func main(){
 	if len(os.Args) < 2 {

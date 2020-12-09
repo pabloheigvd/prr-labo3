@@ -106,6 +106,8 @@ func (b *BullyImpl) message(processId int, aptitude int){
 func (b *BullyImpl) getElu() int {
 	coordinator := 0 // <=> elu
 	for i, _ := range b.processes {
+		log.Print("Parsing process " + strconv.Itoa(i) + " with apt " +
+			strconv.Itoa(b.election.Apts[i]))
 		if b.election.Apts[i] > b.election.Apts[coordinator] {
 			coordinator = i
 		} else if b.election.Apts[i] == b.election.Apts[coordinator] {
@@ -115,6 +117,7 @@ func (b *BullyImpl) getElu() int {
 			 le plus petit numéro sera élu"
 			*/
 			if b.processes[i].No < b.processes[coordinator].No {
+				log.Print("Departage!")
 				coordinator = i
 			}
 		}

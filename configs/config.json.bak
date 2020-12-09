@@ -1,0 +1,20 @@
+{
+  "nbProcess": 2,
+  "trace": false,
+  "debug": false,
+  "processes": [
+    {
+      "no": 0,
+      "initialAptitude": 0,
+      "adr": "127.0.0.1",
+      "noPort": 8100
+    },
+    {
+      "no": 1,
+      "initialAptitude": 10,
+      "adr": "127.0.0.1",
+      "noPort": 8101
+    }
+  ]
+
+}
