@@ -43,7 +43,7 @@ func (p Process) EnvoiMessage(processes []Process) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Print("Envoyé à " + addr + " de:")
+		log.Print("Envoye a " + addr + ":")
 		log.Print(msg)
 	}
 }

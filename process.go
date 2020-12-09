@@ -21,7 +21,7 @@ const LOG_DIRECTORY_NAME = "logs"
 const LOG_FILE_PREFIX = "log"
 const SLOWDOWN_DEBUG_DURATION = 5 * time.Second
 const EXIT_MSG = "exiting..."
-const TRANSMISSION_MAX_DURATION = 2 * time.Second
+const TRANSMISSION_MAX_DURATION = 1500 * time.Millisecond
 
 func main(){
 	if len(os.Args) < 2 {
@@ -36,7 +36,7 @@ func main(){
 	}
 
 	log.Print(processId)
-	var configuration, _ = Utils.Parsing()
+	var configuration = Utils.Parsing()
 
 	if !configuration.Trace {
 		/**
@@ -98,64 +98,31 @@ func main(){
 	log.Print("Etat initial:")
 	log.Print(election)
 
-	// traitement d'une réception à la fois
-	// go routine, for select pour ne traiter qu'un seul msg à la fois
-	go Communication.Listen()
+	moiP := election.GetProcess(configuration.Processes)
 
-	// demarrage des elections
-	// Lorsqu’il démarre, il ne participe pas à une éventuelle élection
-	// qui aurait pu débuter avant son démarrage. Il lance ensuite une élection.
-	/*
-	boucle sans fin sur les réceptions de
-	- [enCours = faux] élection: demande élection
-	- [enCours = faux] getElu // attente fin élection
-	- MESSAGE(i,apti) // réception aptitude
-	- timeout // fin d élection
-	fin boucle
-	 */
-	// timeouts: https://gobyexample.com/timeouts
-	// Une élection dure au maximum 3T.
-	//electionMaxDuration := 3 * election.T
-	//Collecte les aptitudes des processus pendant une durée de 2T
-	//aptitudeCollectionMaxDuration := 2 * election.T
+	// FIXME remove test
+
+	//b := Entities.BullyImpl{}
+	//b.InitBully(election, configuration.Processes)
+	//
+	//fmt.Print(b.EnCours())
+	//b.Election()
+	//fmt.Print(b.EnCours())
+	//time.Sleep(time.Second * 5)
+	//b.Timeout()
+	//fmt.Print(b.EnCours())
+
+	// -----------
 
 	bully := Entities.BullyImpl{}
 	bully.InitBully(election, configuration.Processes)
+	Communication.Init(bully, TRANSMISSION_MAX_DURATION)
 
-	for {
-		bully.Election()
-		_ = bully.GetElu()
+	// traitement d'une réception à la fois
+	// go routine, for select pour ne traiter qu'un seul msg à la fois
+	go Communication.ListenToRemoteMessage(moiP)
 
-		// FIXME move?
-		//fmt.Print(elu)
-		//select {
-		//	case <- time.After(electionMaxDuration):
-		//		log.Println("timeout")
-		//		// Algorithm.Timeout()
-		//		// election.EnCours = false
-		//		break
-		//}
-	}
+	go Communication.ReadUserInput()
+
+	Communication.HandleCommunication()
 }
-
-/* FIXME remove
-for {
-		fmt.Print("Please intialize my aptitude: ")
-		reader := bufio.NewReader(os.Stdin)
-		input, err := reader.ReadString('\n')
-		log.Print("read: " + input)
-		if err != nil {
-			log.Print(err)
-			continue
-		} else {
-			input = input[:len(input) - 1] // shave '\n'
-			election.MonApt, err = strconv.Atoi(input)
-			log.Print(election)
-			if err != nil {
-				log.Print(err)
-				continue
-			}
-			break
-		}
-	}
- */
