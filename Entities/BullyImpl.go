@@ -38,7 +38,8 @@ func (b *BullyImpl) InitBully (el Election, ps []Process){
 
 // Implementation implicite de l'interface Bully
 // Election lancement d'une nouvelle election
-func (b BullyImpl) Election() {
+func (b *BullyImpl) Election() {
+	// note: * est essentiel pour que EnCours passe a true
 	b.demarre()
 }
 
