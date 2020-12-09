@@ -66,14 +66,14 @@ class Test2Nodes(unittest.TestCase):
         configureWith(config_2)
 
         p1 = createProcess(port1)
-        initialElectionMessage = b'L\'elu de l\'election initiale est le processus: 0'
-        iWasWaitingFor(p1, initialElectionMessage, self)
-        closeProcess(p1)
-
         p2 = createProcess(port2)
+
         initialElectionMessage = b'L\'elu de l\'election initiale est le processus: 1'
+
+        iWasWaitingFor(p1, initialElectionMessage, self)
         iWasWaitingFor(p2, initialElectionMessage, self)
-        closeProcess(p1)
+
+        closeProcesses([p1, p2])
 
 
 if __name__ == '__main__':
