@@ -75,6 +75,23 @@ class Test2Nodes(unittest.TestCase):
 
         closeProcesses([p1, p2])
 
+    def test_4_process_determine_the_same_initial_winner(self):
+        configureWith(config_4)
+
+        p1 = createProcess(port1)
+        p2 = createProcess(port2)
+        p3 = createProcess(port3)
+        p4 = createProcess(port4)
+
+        initialElectionMessage = b'L\'elu de l\'election initiale est le processus: 2'
+
+        iWasWaitingFor(p1, initialElectionMessage, self)
+        iWasWaitingFor(p2, initialElectionMessage, self)
+        iWasWaitingFor(p3, initialElectionMessage, self)
+        iWasWaitingFor(p4, initialElectionMessage, self)
+
+        closeProcesses([p1, p2, p3, p4])
+
 
 if __name__ == '__main__':
     unittest.main()
