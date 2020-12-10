@@ -17,6 +17,8 @@ type BullyImpl struct {
 	processes []Process
 }
 
+const SLEEP_CYCLE_DURATION = 50 * time.Millisecond
+
 /* ==============
  * === Public ===
  * ============*/
@@ -39,21 +41,15 @@ func (b *BullyImpl) InitBully (el Election, ps []Process){
 // Implementation implicite de l'interface Bully
 // Election lancement d'une nouvelle election
 func (b *BullyImpl) Election() {
+	b.waitUntilElectionIsOver()
+
 	// note: * est essentiel pour que EnCours passe a true
 	b.demarre()
 }
 
 // GetElu appel bloquant renvoyant l'élu
 func (b BullyImpl) GetElu() int {
-	// attente active
-	cycles := 0
-	sleepCycleDuration := 50 * time.Millisecond
-	for b.election.EnCours {
-		cycles++
-		time.Sleep(sleepCycleDuration) // ne pas tuer la machine
-	}
-	waitingTime := time.Duration(cycles) * sleepCycleDuration
-	log.Print("L'elu est connu apres " + waitingTime.String())
+	b.waitUntilElectionIsOver()
 	return b.getElu()
 }
 
@@ -92,6 +88,17 @@ func (b *BullyImpl) Timeout() {
 ///* ===============
 // * === private ===
 // * =============*/
+
+func (b *BullyImpl) waitUntilElectionIsOver(){
+	// attente active
+	cycles := 0
+	for b.election.EnCours {
+		cycles++
+		time.Sleep(SLEEP_CYCLE_DURATION) // ne pas tuer la machine
+	}
+	waitingTime := time.Duration(cycles) * SLEEP_CYCLE_DURATION
+	log.Print("Wait time: " + waitingTime.String())
+}
 
 // Message màj de l'aptitude du processus appelant en interne
 func (b *BullyImpl) message(processId int, aptitude int){

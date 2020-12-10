@@ -4,6 +4,7 @@
 from pwn import *
 import unittest
 import os
+import time
 
 # Fonction utilitaires
 
@@ -11,8 +12,9 @@ port1 = b'0'
 port2 = b'1'
 port3 = b'2'
 port4 = b'3'
-t = 1.5
-timeout = 2*t + 0.1
+getEluCmd = b'g'
+t = 1.5 + 0.3
+timeout = 2 + 3*t + 1
 debugDelay = 4
 config_file = "config.json"
 config_2 = "config2.test.json"
@@ -24,27 +26,30 @@ dir = script_dir.replace('/e2e', '') + '/configs'
 send_msg_hint = b'>>'
 
 def createProcess(port):
-    p = process('sh')
+    p = process('/bin/sh')
     send(p, b'cd .. && go run process.go ' + port)
     return p
 
 def closeProcess(p):
-    p.close()
-    time.sleep(0.05)
+    p.kill()
 
 def closeProcesses(ps):
     for p in ps:
         closeProcess(p)
+    time.sleep(2)
 
 def getOneLineDebug(p):
-    output = p.recvline(timeout=1 + debugDelay)
+    output = p.recvline(timeout=timeout)
     print(output)
 
 def iWasWaitingFor(p, this, self):
     print(p)
     print(b'Waiting for: ' + this)
-    output = p.recvuntil(this, timeout=1 + debugDelay)
+    output = p.recvuntil(this, timeout=timeout)
     self.assertFalse(b'' == output)
+
+def waitInit(p):
+    p.recvuntil(b'Election results are known after 3s', timeout=timeout)
 
 def send(io, line):
     print(b'You sent: ' + line)
@@ -61,12 +66,18 @@ def configureWith(fileToUse):
 def waitCommunication():
     time.sleep(0.5)
 
+def sleepInit():
+    time.sleep(2)
+
 class Test2Nodes(unittest.TestCase):
+
     def test_both_process_determine_the_same_initial_winner(self):
         configureWith(config_2)
 
         p1 = createProcess(port1)
         p2 = createProcess(port2)
+        waitInit(p1)
+        waitInit(p2)
 
         initialElectionMessage = b'L\'elu de l\'election initiale est le processus: 1'
 
@@ -83,12 +94,12 @@ class Test2Nodes(unittest.TestCase):
         p3 = createProcess(port3)
         p4 = createProcess(port4)
 
-        initialElectionMessage = b'L\'elu de l\'election initiale est le processus: 2'
+        initialElectionMessage = b'Le processus 2 est l\'elu!'
 
-        iWasWaitingFor(p1, initialElectionMessage, self)
-        iWasWaitingFor(p2, initialElectionMessage, self)
-        iWasWaitingFor(p3, initialElectionMessage, self)
-        iWasWaitingFor(p4, initialElectionMessage, self)
+        for p in [p1, p2, p3, p4]:
+            waitInit(p)
+            send(p, getEluCmd)
+            iWasWaitingFor(p, initialElectionMessage, self)
 
         closeProcesses([p1, p2, p3, p4])
 

@@ -20,6 +20,7 @@ import (
 )
 
 const TRANSPORT_PROTOCOL = "udp"
+const STARTUP_DURATION = 2 * time.Second
 
 var (
 	bullyImpl		Entities.BullyImpl
@@ -67,7 +68,7 @@ func ListenToRemoteMessage(moiP Entities.Process){
 func ReadUserInput() {
 
 	// Déclencher une élection au démarrage du processus
-	bullyImpl.Election()
+	electionChannel <- struct{}{}
 
 	eCmd := Entities.ElectionCmd{}
 	gCmd := Entities.GetEluCmd{}
@@ -99,6 +100,8 @@ func ReadUserInput() {
 // HandleCommunication boucle infinie modifiant les données critiques de l'élection
 func HandleCommunication() {
 
+	waitOtherProcessInitialisation()
+
 	electionDuration := 2*t
 	log.Print("Election results are known after " + electionDuration.String())
 
@@ -118,7 +121,9 @@ func HandleCommunication() {
 		case <- getEluChannel:
 			log.Print("L'utilisateur veut connaitre l'elu")
 			elu := bullyImpl.GetElu()
-			fmt.Println("Le processus " + strconv.Itoa(elu) + " est l'elu!")
+			msg := "Le processus " + strconv.Itoa(elu) + " est l'elu!"
+			fmt.Println(msg)
+			log.Print(msg)
 			break
 		case msg := <-messageChannel:
 			processId, apt := handleMessage(msg)
@@ -151,6 +156,13 @@ func HandleCommunication() {
 /* ===============
  * === private ===
  * =============*/
+
+// waitOtherProcessInitialisation for e2e tests or manual testing
+func waitOtherProcessInitialisation() {
+	time.Sleep(STARTUP_DURATION)
+
+	// note: this is useful when you want the initial election to be meaningful
+}
 
 // handleMessage aptitude
 func handleMessage(msg string) (int, int){

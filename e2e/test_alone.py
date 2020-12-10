@@ -29,8 +29,7 @@ def createProcess(port):
     return p
 
 def closeProcess(p):
-    p.close()
-    time.sleep(0.05)
+    p.kill()
 
 def closeProcesses(ps):
     for p in ps:
@@ -61,20 +60,24 @@ def configureWith(fileToUse):
 def waitCommunication():
     time.sleep(0.5)
 
+def sleepInit():
+    time.sleep(2)
+
 class Test2Nodes(unittest.TestCase):
     def test_both_process_determine_the_same_initial_winner(self):
         configureWith(config_2)
 
         p1 = createProcess(port1)
+        sleepInit()
         initialElectionMessage = b'L\'elu de l\'election initiale est le processus: 0'
         iWasWaitingFor(p1, initialElectionMessage, self)
         closeProcess(p1)
 
         p2 = createProcess(port2)
+        sleepInit()
         initialElectionMessage = b'L\'elu de l\'election initiale est le processus: 1'
         iWasWaitingFor(p2, initialElectionMessage, self)
-        closeProcess(p1)
-
+        closeProcess(p2)
 
 if __name__ == '__main__':
     unittest.main()

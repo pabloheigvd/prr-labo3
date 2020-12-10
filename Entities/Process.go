@@ -11,6 +11,7 @@ import (
 	"log"
 	"net"
 	"strconv"
+	"time"
 )
 
 type Process struct {
@@ -45,6 +46,10 @@ func (p Process) EnvoiMessage(processes []Process) {
 		}
 		log.Print("Envoye a " + addr + ":")
 		log.Print(msg)
+
+		// hypothese: le réseau est fiable mais même localhost a de la peine avec
+		// la congestion
+		time.Sleep(15 * time.Millisecond)
 	}
 }
 
