@@ -90,12 +90,20 @@ func ReadUserInput() {
 			go func() {getEluChannel <- struct{}{}}()
 		} else {
 			log.Print("User is trying to set his aptitude")
-			// aptitude
 			monApt, err := strconv.Atoi(userInput)
 			if err != nil {
 				log.Fatal(err)
 			}
 			bullyImpl.SetMonApt(monApt)
+
+			if !bullyImpl.EnCours() {
+				go func() {electionChannel <- struct{}{}}()
+			}
+			/*
+			 * note: si l'élection est déjà en cours, alors à la fin de l'élection, on vérifie
+			 * s'il est judicieux de lancer une élection en se basant sur la valeur actuelle de
+			 * monApt
+			 */
 		}
 	}
 }
@@ -122,21 +130,26 @@ func HandleCommunication() {
 		log.Print("Waiting for new message...")
 		select {
 			case <- electionChannel:
-				// TODO wait here (bloquant mais où)
-				fmt.Print("Lancement d'une nouvelle election")
-				bullyImpl.Election()
-				time.AfterFunc(electionDuration, func (){ timeoutChannel <- struct{}{} })
+				go func() {
+					bullyImpl.WaitUntilElectionIsOver()
+					fmt.Println("Lancement d'une nouvelle election")
+					bullyImpl.Election()
+					time.AfterFunc(electionDuration, func (){ timeoutChannel <- struct{}{} })
+				}()
 				break
 			case <- getEluChannel:
-				// TODO wait here (bloquant mais où)
-				log.Print("L'utilisateur veut connaitre l'elu")
-				elu := bullyImpl.GetElu()
-				msg := "Le processus " + strconv.Itoa(elu) + " est l'elu!"
-				fmt.Println(msg)
-				log.Print(msg)
+				go func() {
+					bullyImpl.WaitUntilElectionIsOver()
+					log.Print("L'utilisateur veut connaitre l'elu")
+					// TODO change v
+					elu := bullyImpl.GetElu()
+					msg := "Le processus " + strconv.Itoa(elu) + " est l'elu!"
+					fmt.Println(msg)
+					log.Print(msg)
+				}()
 				break
 			case msg := <- messageChannel:
-				processId, apt := handleMessage(msg)
+				processId, apt := handleRemoteMessage(msg)
 
 				if !bullyImpl.EnCours() {
 					log.Print("Election lancee apres reception de MESSAGE(pid, apt)")
@@ -154,6 +167,7 @@ func HandleCommunication() {
 				if initialElection {
 					initialElection = false
 					fmt.Println("Fin de l'election initial")
+					// TODO change v
 					elu := bullyImpl.GetElu()
 
 					fmt.Println("L'elu de l'election initiale est le processus: " +
@@ -188,8 +202,8 @@ func waitOtherProcessInitialisation() {
 	// note: this is useful when you want the initial election to be meaningful
 }
 
-// handleMessage aptitude
-func handleMessage(msg string) (int, int){
+// handleRemoteMessage aptitude
+func handleRemoteMessage(msg string) (int, int){
 	log.Print("Received: " + msg)
 	tokens := strings.Split(msg, " ")
 	if len(tokens) < 3 {

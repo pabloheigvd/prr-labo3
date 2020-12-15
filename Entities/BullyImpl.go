@@ -54,7 +54,7 @@ func (b BullyImpl) IHaveChangedAptitude() bool {
 
 // GetElu appel bloquant renvoyant l'élu
 func (b BullyImpl) GetElu() int {
-	b.waitUntilElectionIsOver()
+	b.WaitUntilElectionIsOver()
 	return b.getElu()
 }
 
@@ -111,11 +111,8 @@ func (b *BullyImpl) Demarre() {
 	// timer enclenché dans Communication.go
 }
 
-///* ===============
-// * === private ===
-// * =============*/
-
-func (b *BullyImpl) waitUntilElectionIsOver(){
+// WaitUntilElectionIsOver bloquer jusqu'à ce que l'élection se termine
+func (b *BullyImpl) WaitUntilElectionIsOver(){
 	// attente active
 	cycles := 0
 	for b.election.EnCours {
@@ -126,6 +123,10 @@ func (b *BullyImpl) waitUntilElectionIsOver(){
 	waitingTime := time.Duration(cycles) * SLEEP_CYCLE_DURATION
 	log.Print("Wait time: " + waitingTime.String())
 }
+
+///* ===============
+// * === private ===
+// * =============*/
 
 // Message màj de l'aptitude du processus appelant en interne
 func (b *BullyImpl) message(processId int, aptitude int){
