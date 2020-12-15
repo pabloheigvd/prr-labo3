@@ -17,7 +17,7 @@ debugDelay = 4
 config_file = "config.json"
 config_2 = "config2.test.json"
 config_2_dbg = "config2.test.dbg.json"
-config_4 = "config4.test.json"
+config_4 = "config4departage.test.json"
 config_4_dbg = "config4.test.dbg.json"
 script_dir = os.path.dirname(__file__)
 dir = script_dir.replace('/e2e', '') + '/configs'
@@ -29,8 +29,7 @@ def createProcess(port):
     return p
 
 def closeProcess(p):
-    p.close()
-    time.sleep(0.05)
+    p.kill()
 
 def closeProcesses(ps):
     for p in ps:
@@ -61,20 +60,24 @@ def configureWith(fileToUse):
 def waitCommunication():
     time.sleep(0.5)
 
+def sleepInit():
+    time.sleep(2)
+
 class Test2Nodes(unittest.TestCase):
     def test_both_process_determine_the_same_initial_winner(self):
         configureWith(config_2)
 
         p1 = createProcess(port1)
+        sleepInit()
         initialElectionMessage = b'L\'elu de l\'election initiale est le processus: 0'
         iWasWaitingFor(p1, initialElectionMessage, self)
         closeProcess(p1)
 
         p2 = createProcess(port2)
+        sleepInit()
         initialElectionMessage = b'L\'elu de l\'election initiale est le processus: 1'
         iWasWaitingFor(p2, initialElectionMessage, self)
-        closeProcess(p1)
-
+        closeProcess(p2)
 
 if __name__ == '__main__':
     unittest.main()

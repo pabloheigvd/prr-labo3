@@ -100,20 +100,6 @@ func main(){
 
 	moiP := election.GetProcess(configuration.Processes)
 
-	// FIXME remove test
-
-	//b := Entities.BullyImpl{}
-	//b.InitBully(election, configuration.Processes)
-	//
-	//fmt.Print(b.EnCours())
-	//b.Election()
-	//fmt.Print(b.EnCours())
-	//time.Sleep(time.Second * 5)
-	//b.Timeout()
-	//fmt.Print(b.EnCours())
-
-	// -----------
-
 	bully := Entities.BullyImpl{}
 	bully.InitBully(election, configuration.Processes)
 	Communication.Init(bully, TRANSMISSION_MAX_DURATION)
