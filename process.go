@@ -110,7 +110,5 @@ func main(){
 
 	go Communication.ReadUserInput()
 
-	go Communication.HandleCommunication()
-
-	for {}
+	Communication.HandleCommunication()
 }

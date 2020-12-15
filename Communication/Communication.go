@@ -28,6 +28,7 @@ var (
 	electionChannel = make(chan struct{})
 	getEluChannel   = make(chan struct{})
 	messageChannel  = make(chan string)
+	timeoutChannel  = make(chan struct{})
 )
 
 /* ==============
@@ -51,6 +52,7 @@ func ListenToRemoteMessage(moiP Entities.Process){
 	// from udp slide
 	buf := make([]byte, 1024)
 	for {
+		log.Print("Waiting for remote message...")
 		n, cliAddr, err := conn.ReadFrom(buf)
 		if err != nil {
 			log.Fatal(err)
@@ -59,16 +61,14 @@ func ListenToRemoteMessage(moiP Entities.Process){
 		for msg.Scan() {
 			msg := msg.Text()
 			log.Print("Received: " + msg + " from " + cliAddr.String() + "\n")
-			messageChannel <- msg
+			go func() {messageChannel <- msg}()
 		}
+		log.Print("Finished parsing remote msg")
 	}
 }
 
 // ReadUserInput boucle infinie lisant les inputs de l'utilisateur
 func ReadUserInput() {
-
-	// Déclencher une élection au démarrage du processus
-	electionChannel <- struct{}{}
 
 	eCmd := Entities.ElectionCmd{}
 	gCmd := Entities.GetEluCmd{}
@@ -83,9 +83,11 @@ func ReadUserInput() {
 		log.Print()
 
 		if eCmd.Match(userInput) {
-			electionChannel <- struct{}{}
+			log.Print("User has inputted the election command")
+			go func() {electionChannel <- struct{}{}}()
 		} else if gCmd.Match(userInput) {
-			getEluChannel <- struct{}{}
+			log.Print("User has inputted the getElu command")
+			go func() {getEluChannel <- struct{}{}}()
 		} else {
 			// aptitude
 			monApt, err := strconv.Atoi(userInput)
@@ -106,49 +108,57 @@ func HandleCommunication() {
 	log.Print("Election results are known after " + electionDuration.String())
 
 	initialElection := true
+	/*
+	 * By default sends and receives block until both the sender and receiver are ready
+	 * source: https://gobyexample.com/channels
+	 */
+	go func() { electionChannel <- struct{}{} }()
 
-	timer := time.NewTimer(electionDuration)
-	log.Print("Election initial demaree")
+	// TODO Election fait une func un timer avec afterfunc plutot que declarer
+	//  afterFunc plrs fois
 
 	for {
+		log.Print("Waiting for new message...")
 		select {
-		case <- electionChannel:
-			fmt.Print("Lancement d'une nouvelle election")
-			bullyImpl.Election()
-			timer.Stop()
-			timer = time.NewTimer(electionDuration)
-			break
-		case <- getEluChannel:
-			log.Print("L'utilisateur veut connaitre l'elu")
-			elu := bullyImpl.GetElu()
-			msg := "Le processus " + strconv.Itoa(elu) + " est l'elu!"
-			fmt.Println(msg)
-			log.Print(msg)
-			break
-		case msg := <-messageChannel:
-			processId, apt := handleMessage(msg)
-
-			if !bullyImpl.EnCours() {
-				log.Print("Election lancee apres reception de MESSAGE(pid, apt)")
+			case <- electionChannel:
+				// TODO wait here (bloquant mais où)
+				fmt.Print("Lancement d'une nouvelle election")
 				bullyImpl.Election()
-			}
-			bullyImpl.SetApt(processId, apt)
-			break
-			case <- timer.C: // timeout
-			log.Print("Timeout! Fin de l'election")
-			bullyImpl.Timeout()
-
-			if initialElection {
-				initialElection = false
-				fmt.Println("Fin de l'election initial")
+				time.AfterFunc(electionDuration, func (){ timeoutChannel <- struct{}{} })
+				break
+			case <- getEluChannel:
+				// TODO wait here (bloquant mais où)
+				log.Print("L'utilisateur veut connaitre l'elu")
 				elu := bullyImpl.GetElu()
+				msg := "Le processus " + strconv.Itoa(elu) + " est l'elu!"
+				fmt.Println(msg)
+				log.Print(msg)
+				break
+			case msg := <- messageChannel:
+				processId, apt := handleMessage(msg)
 
-				fmt.Println("L'elu de l'election initiale est le processus: " +
-					strconv.Itoa(elu))
-			}
-			break
-		default:
-			break
+				if !bullyImpl.EnCours() {
+					log.Print("Election lancee apres reception de MESSAGE(pid, apt)")
+					bullyImpl.Election()
+					time.AfterFunc(electionDuration, func (){ timeoutChannel <- struct{}{} })
+				}
+				bullyImpl.SetApt(processId, apt)
+				break
+			case <- timeoutChannel: // timeout
+				// "When the Timer expires, the current time will be sent on C"
+				// source: https://golang.org/pkg/time/#Timer
+				log.Print("Timeout! Fin de l'election")
+				bullyImpl.Timeout()
+
+				if initialElection {
+					initialElection = false
+					fmt.Println("Fin de l'election initial")
+					elu := bullyImpl.GetElu()
+
+					fmt.Println("L'elu de l'election initiale est le processus: " +
+						strconv.Itoa(elu))
+				}
+				break
 		}
 	}
 }
