@@ -107,7 +107,7 @@ func HandleCommunication() {
 
 	initialElection := true
 
-	timer := time.NewTicker(electionDuration)
+	timer := time.NewTimer(electionDuration)
 	log.Print("Election initial demaree")
 
 	for {
@@ -116,7 +116,7 @@ func HandleCommunication() {
 			fmt.Print("Lancement d'une nouvelle election")
 			bullyImpl.Election()
 			timer.Stop()
-			timer = time.NewTicker(electionDuration)
+			timer = time.NewTimer(electionDuration)
 			break
 		case <- getEluChannel:
 			log.Print("L'utilisateur veut connaitre l'elu")
