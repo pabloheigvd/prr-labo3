@@ -144,17 +144,14 @@ func (b *BullyImpl) getElu() int {
 
 		if b.election.Apts[i] > b.election.Apts[coordinator] {
 			coordinator = i
-		} else if b.election.Apts[i] == b.election.Apts[coordinator] {
-			/*
-			 règle de départage:
-			 "En cas d’égalité d’aptitudes, celui ayant
-			 le plus petit numéro sera élu"
-			*/
-			if b.processes[i].No < b.processes[coordinator].No {
-				log.Print("Departage!")
-				coordinator = i
-			}
 		}
+		/*
+		 * règle de départage:
+		 * "En cas d’égalité d’aptitudes, celui ayant
+		 * le plus petit numéro sera élu"
+		 * note: satifsfaite implicitement dans l'ordre de traitement des
+		 * processus
+		 */
 	}
 
 	if len(missingProcess) == 0 {
