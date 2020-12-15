@@ -89,6 +89,7 @@ func ReadUserInput() {
 			log.Print("User has inputted the getElu command")
 			go func() {getEluChannel <- struct{}{}}()
 		} else {
+			log.Print("User is trying to set his aptitude")
 			// aptitude
 			monApt, err := strconv.Atoi(userInput)
 			if err != nil {
@@ -157,6 +158,19 @@ func HandleCommunication() {
 
 					fmt.Println("L'elu de l'election initiale est le processus: " +
 						strconv.Itoa(elu))
+				}
+
+				/*
+				 * On peut interactivement changer depuis la console de chaque processus
+				 * l’aptitude de celui-ci. Dans ce cas, une nouvelle élection sera déclenchée
+				 * pour en tenir compte mais seulement à l’issue d’une éventuelle élection
+				 * qui aurait pu démarrer avant ce changement.
+				 */
+				if bullyImpl.IHaveChangedAptitude() {
+					msg := "L'aptitude ayant changee depuis la derniere election precedente, une nouvelle election va etre lancee"
+					fmt.Println(msg)
+					log.Print(msg)
+					go func() { electionChannel <- struct{}{} }()
 				}
 				break
 		}

@@ -7,6 +7,7 @@
 package Entities
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"time"
@@ -45,6 +46,12 @@ func (b *BullyImpl) Election() {
 	b.Demarre()
 }
 
+// IHaveChangedAptitude = vrai si l'aptitude actuelle est différente de
+// celle utilisée lors de la dernière élection
+func (b BullyImpl) IHaveChangedAptitude() bool {
+	return b.election.MonApt != b.election.Apts[b.election.Moi]
+}
+
 // GetElu appel bloquant renvoyant l'élu
 func (b BullyImpl) GetElu() int {
 	b.waitUntilElectionIsOver()
@@ -56,6 +63,8 @@ func (b *BullyImpl) SetMonApt(monApt int) {
 	// TODO verification de l'input
 	b.election.MonApt = monApt
 	log.Print("MonApt = " + strconv.Itoa(monApt))
+	fmt.Println("L'aptitude de ce processus sera de " + strconv.Itoa(monApt) +
+		" pour la prochaine election.")
 }
 
 // SetApt used while in election
