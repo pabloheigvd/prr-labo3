@@ -153,7 +153,12 @@ func (b BullyImpl) IsCoordinator() bool {
 
 // GetMoi retourne le processus qui est lié à moi
 func (b BullyImpl) GetMoi() Process {
-	return b.processes[b.election.Moi]
+	return b.GetProcess(b.election.Moi)
+}
+
+// GetProcess
+func (b *BullyImpl) GetProcess(id int) Process {
+	return b.processes[id]
 }
 
 ///* ===============
@@ -207,9 +212,4 @@ func (b *BullyImpl) setElu() {
 
 	b.election.Elu = coordinator
 	log.Print("L'elu est le processus " + strconv.Itoa(coordinator))
-}
-
-// GetProcess
-func (b *BullyImpl) GetProcess(id int) Process {
-	return b.processes[id]
 }
