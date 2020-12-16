@@ -15,11 +15,11 @@ import (
 )
 
 type Process struct {
-	No				int 	`json:"no"`
-	InitialAptitude	int 	`json:"initialAptitude"`
-	Adr   			string 	`json:"adr"`
-	NoPort   		int 	`json:"noPort"`
-	aptitude		int
+	No              int 	`json:"no"`
+	InitialAptitude int 	`json:"initialAptitude"`
+	Adr             string 	`json:"adr"`
+	NoPort          int 	`json:"noPort"`
+	Aptitude        int
 }
 
 // GetAdress returns addr:port of node
@@ -57,7 +57,7 @@ func (p Process) Pong(){
 
 // getMessage a envoyer aux autres processus
 func (p Process) getMessage() string {
-	return "MESSAGE " + strconv.Itoa(p.No) + " " + strconv.Itoa(p.aptitude)
+	return "MESSAGE " + strconv.Itoa(p.No) + " " + strconv.Itoa(p.Aptitude)
 }
 
 // sendMsg envoie le message msg au processus p

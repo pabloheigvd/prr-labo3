@@ -100,7 +100,7 @@ func main(){
 
 	moiP := election.GetProcess(configuration.Processes)
 
-	bully := Entities.BullyImpl{}
+	bully := Communication.BullyImpl{}
 	bully.InitBully(election, configuration.Processes)
 	Communication.Init(bully, TRANSMISSION_MAX_DURATION)
 

@@ -1,6 +1,7 @@
 package Communication
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"time"
@@ -8,10 +9,14 @@ import (
 
 var endTimer = make(chan struct{})
 
-// sendPing to coordinator every interval duration
-func sendPing(interval time.Duration){
+/* ==============
+ * === Public ===
+ *=============*/
+
+// StartPing to coordinator every interval duration
+func StartPing(interval time.Duration){
+	fmt.Println("Ping Time")
 	pinging := true
-	log.Print("Pinging set to " + strconv.FormatBool(pinging))
 	for pinging {
 		pinging = false
 		log.Print("Pinging set to " + strconv.FormatBool(pinging))
@@ -40,19 +45,23 @@ func sendPing(interval time.Duration){
 	}
 }
 
+// StopPinging
+func StopPinging() {
+	if !initialElection {
+		log.Print("No pinging desired")
+		go func() { endTimer <- struct{}{} }()
+	}
+}
+
+/* ===============
+ * === private ===
+ * =============*/
+
 // shouldIPing
 func shouldIPing() bool {
 	return !initialElection &&
 		!bullyImpl.EnCours() &&
 		!bullyImpl.IsCoordinator()
-}
-
-// stopPinging
-func stopPinging() {
-	if !initialElection {
-		log.Print("No pinging desired")
-		go func() { endTimer <- struct{}{} }()
-	}
 }
 
 // handlePing

@@ -4,20 +4,21 @@
  * File: 	BullyImpl.go
  */
 
-package Entities
+package Communication
 
 import (
 	"fmt"
 	"log"
+	"prr-labo3/Entities"
 	"strconv"
 	"time"
 )
 
 type BullyImpl struct {
-	election  			Election
-	processes 			[]Process
-	isCoordinatorAlive 	bool
-	participating		bool
+	election           Entities.Election
+	processes          []Entities.Process
+	isCoordinatorAlive bool
+	participating      bool
 }
 
 const SLEEP_CYCLE_DURATION = 50 * time.Millisecond
@@ -28,7 +29,7 @@ const SLEEP_CYCLE_DURATION = 50 * time.Millisecond
 // rappel: Méthodes définies uniquement sur des types déclarés dans le même package
 
 // InitBully constructeur pour ne pas exposer les champs
-func (b *BullyImpl) InitBully (el Election, ps []Process){
+func (b *BullyImpl) InitBully (el Entities.Election, ps []Entities.Process){
 	nbProcesses := len(ps)
 	nbDefinedAptitude := len(el.Apts)
 	if nbProcesses != nbDefinedAptitude {
@@ -46,6 +47,12 @@ func (b *BullyImpl) InitBully (el Election, ps []Process){
 // Election lancement d'une nouvelle election
 func (b *BullyImpl) Election() {
 	// note: * est essentiel pour que EnCours passe a true
+	StopPinging()
+	// Note: ne pas traîter les messages du canal de messages et les consommer
+	// ensuite
+	b.WaitUntilElectionIsOver()
+
+	fmt.Println("Lancement d'une nouvelle election")
 	b.Demarre()
 }
 
@@ -78,8 +85,9 @@ func (b *BullyImpl) SetApt(processId int, apt int) {
 	}
 
 	b.election.Apts[processId] = apt
-	b.processes[processId].aptitude = apt
-	log.Print("Process " + strconv.Itoa(processId) + " aptitude was set to " + strconv.Itoa(apt))
+	b.processes[processId].Aptitude = apt
+	log.Print("Process " + strconv.Itoa(processId) +
+		" aptitude was set to " + strconv.Itoa(apt))
 }
 
 // EnCours vrai s'il y a une élection en cours
@@ -110,11 +118,12 @@ func (b *BullyImpl) Demarre() {
 	moiP := b.processes[moi]
 	moiP.EnvoiMessage(b.processes)
 
-	// timer enclenché dans BullyChannelLoop.go
+	SetTimeout()
 }
 
 // GetElu retourne le processus élu lors de la dernière élection
 func (b BullyImpl) GetElu() int {
+	b.WaitUntilElectionIsOver()
 	return b.election.Elu
 }
 
@@ -149,8 +158,8 @@ func (b *BullyImpl) SetIsCoordinatorAlive(s bool) {
 }
 
 // GetCoordinator retourne le processus elu
-func (b BullyImpl) GetCoordinator() Process {
-	return b.GetProcess(b.GetElu())
+func (b BullyImpl) GetCoordinator() Entities.Process {
+	return b.GetProcess(b.election.Elu)
 }
 
 // IsCoordinator = vrai si Moi est l'elu
@@ -159,12 +168,12 @@ func (b BullyImpl) IsCoordinator() bool {
 }
 
 // GetMoi retourne le processus qui est lié à moi
-func (b BullyImpl) GetMoi() Process {
+func (b BullyImpl) GetMoi() Entities.Process {
 	return b.GetProcess(b.election.Moi)
 }
 
 // GetProcess
-func (b *BullyImpl) GetProcess(id int) Process {
+func (b *BullyImpl) GetProcess(id int) Entities.Process {
 	return b.processes[id]
 }
 
