@@ -42,7 +42,31 @@ On ouvre les fichiers `logs/log<pId>` (`pId` variant de 0 à 3) et consulte la f
 On observe dans la configuration utilisée (`configs/config.json`) que le processus 3 aurait pu être élu car il a une aptitude égale à celle du processus 2. Cependant, le processus 3 n'est pas élu car la règle de départage par le plus petit numéro de processus a bien été appliquée. De plus on vérifie que le processus ayant la plus grande aptitude a été élu.
 
 ## Test détection de la panne de l'élu
-TODO
+On remplace le fichier de configuration `config.json` avec le contenu de `config4departage.test.json`.
+
+On lance quatres processus dans quatre terminaux séparés avec:
+```bash
+go run process.go <pId>
+```
+**Note**: on choisit les quatres valeurs de pId allant de 0 à 3
+
+Une fois les quatres processus lancés, on attends 4-5 secondes, puis dans un des terminaux, on tape:
+```bash
+e
+```
+pour démarrer une élection. On patiente 3-4 secondes, le temps que l'élection se termine.
+
+Une fois ceci fait, on va fermer le processus 2 avec `ctrl-c`.
+
+Après 3-4 secondes, on vérifie que le processus élu est le processus 3 en tapant 
+```bash
+g
+```
+dans les trois terminaux restants.
+
+On répète l'opération en fermant le processus 3, vérifie que le processus 1 est élu avec `g`.
+
+On vérifie que le processus 0 est élu après avoir fermé le processus `1`.
 
 ## Test changement d'aptitude interactif
 TODO
