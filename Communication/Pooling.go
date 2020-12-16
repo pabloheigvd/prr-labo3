@@ -1,7 +1,6 @@
 package Communication
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 	"time"
@@ -15,7 +14,7 @@ var endTimer = make(chan struct{})
 
 // StartPing to coordinator every interval duration
 func StartPing(interval time.Duration){
-	fmt.Println("Ping Time")
+	log.Println("Ping Time")
 	pinging := true
 	for pinging {
 		pinging = false
