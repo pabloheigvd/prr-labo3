@@ -69,4 +69,46 @@ On répète l'opération en fermant le processus 3, vérifie que le processus 1 
 On vérifie que le processus 0 est élu après avoir fermé le processus `1`.
 
 ## Test changement d'aptitude interactif
-TODO
+On remplace le fichier de configuration `config.json` avec le contenu de `config4departage.test.json`.
+
+On lance quatres processus dans quatre terminaux séparés avec:
+```bash
+go run process.go <pId>
+```
+**Note**: on choisit les quatres valeurs de pId allant de 0 à 3
+
+Une fois les quatres processus lancés, on attends 4-5 secondes, puis dans un des terminaux, on tape:
+```bash
+e
+```
+pour démarrer une élection. On patiente 3-4 secondes, le temps que l'élection se termine.
+
+On prend un terminal au hasard et on tape une aptitude grande, e.g. 123.
+
+On patiente 3-4 secondes, le temps que l'aptitude se propage aux autres processus.
+
+On vérifie que le processus pour lequel l'aptitude est 123 est élu en tapant dans chaque terminaux:
+```bash
+g
+```
+
+On modifie l'aptitude a 1 et on vérifie que ce même processus n'est plus élu de manière similaire.
+
+## Test un changement d'aptitude pas avant que l'élection en cours se termine
+On remplace le fichier de configuration `config.json` avec le contenu de `config4departage.test.json`.
+
+On lance quatres processus dans quatre terminaux séparés avec :
+```bash
+go run process.go <pId>
+```
+**Note**: on choisit les quatre valeurs de pId allant de 0 à 3
+
+Une fois les quatre processus lancés, on attend 4-5 secondes, puis dans un des terminaux, on tape:
+```bash
+e
+```
+pour démarrer une élection. On patiente 3-4 secondes, le temps que l'élection se termine.
+
+On modifie l'aptitude d'un terminal avec 123. 1 seconde après avoir modifié l'aptitude, on remodifie l'aptitude avec 1234.
+
+On aperçoit dans la console que deux élections ont été lancées.
