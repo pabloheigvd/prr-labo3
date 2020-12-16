@@ -6,26 +6,52 @@ import (
 	"time"
 )
 
+var endTimer = make(chan struct{})
+
 // sendPing to coordinator every interval duration
 func sendPing(interval time.Duration){
-	// TODO fix pong not received properly
+	pinging := true
+	log.Print("Pinging set to " + strconv.FormatBool(pinging))
+	for pinging {
+		pinging = false
+		log.Print("Pinging set to " + strconv.FormatBool(pinging))
 
-	for {
-		if !initialElection && !bullyImpl.EnCours() && !bullyImpl.IsCoordinator() {
+		if shouldIPing() {
+			pinging = true
+			log.Print("Pinging set to " + strconv.FormatBool(pinging))
+
 			bullyImpl.SetIsCoordinatorAlive(false)
 			log.Print(bullyImpl.IsCoordinatorAlive())
 			bullyImpl.GetMoi().Ping(bullyImpl.GetCoordinator())
-		}
 
-		timer := time.NewTimer(interval)
-		<- timer.C
-		if !initialElection &&
-			!bullyImpl.EnCours() &&
-			!bullyImpl.IsCoordinator() &&
-			!bullyImpl.IsCoordinatorAlive() {
-			log.Print("Coordinator is not alive, launching a new Election")
-			go func(){ electionChannel <- struct{}{} }()
+			timer := time.NewTimer(interval)
+			select {
+			case <- endTimer:
+				log.Print("Pinging was ended")
+			case <- timer.C:
+				if shouldIPing() && !bullyImpl.IsCoordinatorAlive() {
+					pinging = false
+					log.Print("Pinging set to " + strconv.FormatBool(pinging))
+					log.Print("Coordinator is not alive, launching a new Election")
+					go func(){ electionChannel <- struct{}{} }()
+				}
+			}
 		}
+	}
+}
+
+// shouldIPing
+func shouldIPing() bool {
+	return !initialElection &&
+		!bullyImpl.EnCours() &&
+		!bullyImpl.IsCoordinator()
+}
+
+// stopPinging
+func stopPinging() {
+	if !initialElection {
+		log.Print("No pinging desired")
+		go func() { endTimer <- struct{}{} }()
 	}
 }
 

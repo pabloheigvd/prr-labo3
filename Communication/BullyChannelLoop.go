@@ -39,7 +39,7 @@ func Init(bi Entities.BullyImpl, tt time.Duration){
 // HandleCommunication boucle infinie modifiant les données critiques de l'élection
 func HandleCommunication() {
 	electionDuration := 2*t
-	pingResponse := electionDuration
+	pingResponseMaxDelay := electionDuration
 	log.Print("Election results are known after " + electionDuration.String())
 
 	/*
@@ -54,6 +54,7 @@ func HandleCommunication() {
 			case <- electionChannel:
 				go func() {
 					bullyImpl.WaitUntilElectionIsOver()
+					stopPinging()
 					fmt.Println("Lancement d'une nouvelle election")
 					bullyImpl.Election()
 					time.AfterFunc(electionDuration, func (){ timeoutChannel <- struct{}{} })
@@ -84,8 +85,6 @@ func HandleCommunication() {
 					elu := bullyImpl.GetElu()
 					fmt.Println("L'elu de l'election initiale est le processus: " +
 						strconv.Itoa(elu))
-
-					go sendPing(pingResponse)
 				}
 
 				/*
@@ -100,6 +99,8 @@ func HandleCommunication() {
 					fmt.Println(msg)
 					log.Print(msg)
 					go func() { electionChannel <- struct{}{} }()
+				} else {
+					go sendPing(pingResponseMaxDelay)
 				}
 				break
 		}

@@ -51,6 +51,7 @@ func handleMessage(pId string, apt string) {
 
 	if !bullyImpl.EnCours() {
 		log.Print("Election lancee apres reception de MESSAGE(pid, apt)")
+		stopPinging()
 		bullyImpl.Election()
 		electionDuration := 2*t
 		time.AfterFunc(electionDuration, func (){ timeoutChannel <- struct{}{} })
