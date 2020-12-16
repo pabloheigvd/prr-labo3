@@ -19,7 +19,7 @@ func ReadUserInput() {
 		}
 
 		userInput = Utils.ParseUserInput(userInput)
-		log.Print()
+		log.Print("User input (raw): " + userInput)
 
 		if eCmd.Match(userInput) {
 			log.Print("User has inputted the election command")

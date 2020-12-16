@@ -55,7 +55,10 @@ func (b BullyImpl) IHaveChangedAptitude() bool {
 
 // SetMonApt no effect on current election
 func (b *BullyImpl) SetMonApt(monApt int) {
-	// TODO verification de l'input
+	if monApt <= 0 {
+		log.Fatal("Aptitude is positive")
+	}
+
 	b.election.MonApt = monApt
 	log.Print("MonApt = " + strconv.Itoa(monApt))
 	fmt.Println("L'aptitude de ce processus sera de " + strconv.Itoa(monApt) +
@@ -68,7 +71,9 @@ func (b *BullyImpl) SetApt(processId int, apt int) {
 		log.Fatal("Process doesn't exist")
 	}
 
-	// TODO validation apt
+	if apt <= 0 {
+		log.Fatal("Aptitude is positive")
+	}
 
 	b.election.Apts[processId] = apt
 	b.processes[processId].aptitude = apt
@@ -80,7 +85,7 @@ func (b BullyImpl) EnCours() bool {
 	return b.election.EnCours
 }
 
-// timeout actions à prendre en fin d'une élection
+// Timeout actions à prendre en fin d'une élection
 func (b *BullyImpl) Timeout() {
 	b.election.EnCours = false
 	b.setElu()
@@ -136,8 +141,6 @@ func (b *BullyImpl) SetIsCoordinatorAlive(s bool) {
 	log.Print("isCoordinatorAlive set to " + strconv.FormatBool(s))
 }
 
-
-
 // GetCoordinator retourne le processus elu
 func (b BullyImpl) GetCoordinator() Process {
 	return b.GetProcess(b.GetElu())
@@ -156,8 +159,6 @@ func (b BullyImpl) GetMoi() Process {
 ///* ===============
 // * === private ===
 // * =============*/
-
-
 
 // Message màj de l'aptitude du processus appelant en interne
 func (b *BullyImpl) message(processId int, aptitude int){
@@ -208,6 +209,7 @@ func (b *BullyImpl) setElu() {
 	log.Print("L'elu est le processus " + strconv.Itoa(coordinator))
 }
 
+// GetProcess
 func (b *BullyImpl) GetProcess(id int) Process {
 	return b.processes[id]
 }
