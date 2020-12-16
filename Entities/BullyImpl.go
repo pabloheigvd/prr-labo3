@@ -14,8 +14,9 @@ import (
 )
 
 type BullyImpl struct {
-	election  Election
-	processes []Process
+	election  			Election
+	processes 			[]Process
+	isCoordinatorAlive 	bool
 }
 
 const SLEEP_CYCLE_DURATION = 50 * time.Millisecond
@@ -52,12 +53,6 @@ func (b BullyImpl) IHaveChangedAptitude() bool {
 	return b.election.MonApt != b.election.Apts[b.election.Moi]
 }
 
-// GetElu appel bloquant renvoyant l'élu
-func (b BullyImpl) GetElu() int {
-	b.WaitUntilElectionIsOver()
-	return b.getElu()
-}
-
 // SetMonApt no effect on current election
 func (b *BullyImpl) SetMonApt(monApt int) {
 	// TODO verification de l'input
@@ -87,8 +82,8 @@ func (b BullyImpl) EnCours() bool {
 
 // timeout actions à prendre en fin d'une élection
 func (b *BullyImpl) Timeout() {
-	b.election.Elu = b.getElu()
 	b.election.EnCours = false
+	b.setElu()
 	log.Print("L'election est terminee")
 }
 
@@ -111,9 +106,15 @@ func (b *BullyImpl) Demarre() {
 	// timer enclenché dans Communication.go
 }
 
+// GetElu retourne le processus élu lors de la dernière élection
+func (b BullyImpl) GetElu() int {
+	return b.election.Elu
+}
+
 // WaitUntilElectionIsOver bloquer jusqu'à ce que l'élection se termine
 func (b *BullyImpl) WaitUntilElectionIsOver(){
 	// attente active
+	// note: est-ce qu'il ne vaut mieux pas attendre sur un channel?
 	cycles := 0
 	for b.election.EnCours {
 		cycles++
@@ -124,9 +125,39 @@ func (b *BullyImpl) WaitUntilElectionIsOver(){
 	log.Print("Wait time: " + waitingTime.String())
 }
 
+// IsCoordinatorAlive = vrai si l'elu est toujours present
+func (b BullyImpl) IsCoordinatorAlive() bool {
+	return b.isCoordinatorAlive
+}
+
+// IsCoordinatorAlive = vrai si l'elu est toujours present
+func (b *BullyImpl) SetIsCoordinatorAlive(s bool) {
+	b.isCoordinatorAlive = s
+	log.Print("isCoordinatorAlive set to " + strconv.FormatBool(s))
+}
+
+
+
+// GetCoordinator retourne le processus elu
+func (b BullyImpl) GetCoordinator() Process {
+	return b.GetProcess(b.GetElu())
+}
+
+// IsCoordinator = vrai si Moi est l'elu
+func (b BullyImpl) IsCoordinator() bool {
+	return b.GetMoi() == b.GetCoordinator()
+}
+
+// GetMoi retourne le processus qui est lié à moi
+func (b BullyImpl) GetMoi() Process {
+	return b.processes[b.election.Moi]
+}
+
 ///* ===============
 // * === private ===
 // * =============*/
+
+
 
 // Message màj de l'aptitude du processus appelant en interne
 func (b *BullyImpl) message(processId int, aptitude int){
@@ -137,8 +168,8 @@ func (b *BullyImpl) message(processId int, aptitude int){
 	b.election.Apts[processId] = aptitude
 }
 
-// getElu renvoie l'elu avec la règle de départage indiquée
-func (b *BullyImpl) getElu() int {
+// GetElu renvoie l'elu avec la règle de départage indiquée
+func (b *BullyImpl) setElu() {
 	missingProcess := []int{}
 
 	coordinator := 0 // <=> elu
@@ -173,6 +204,10 @@ func (b *BullyImpl) getElu() int {
 		}
 	}
 
+	b.election.Elu = coordinator
 	log.Print("L'elu est le processus " + strconv.Itoa(coordinator))
-	return b.processes[coordinator].No
+}
+
+func (b *BullyImpl) GetProcess(id int) Process {
+	return b.processes[id]
 }
