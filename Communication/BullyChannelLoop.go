@@ -1,7 +1,7 @@
 /*
  * Work: 	PRR-labo3
  * Author: 	Pablo Mercado
- * File: 	Communication.go
+ * File: 	BullyChannelLoop.go
  */
 
 package Communication
@@ -39,6 +39,7 @@ func Init(bi Entities.BullyImpl, tt time.Duration){
 // HandleCommunication boucle infinie modifiant les données critiques de l'élection
 func HandleCommunication() {
 	electionDuration := 2*t
+	pingResponse := electionDuration
 	log.Print("Election results are known after " + electionDuration.String())
 
 	/*
@@ -46,8 +47,6 @@ func HandleCommunication() {
 	 * source: https://gobyexample.com/channels
 	 */
 	go func() { electionChannel <- struct{}{} }()
-
-	go sendPing(4*t)
 
 	for {
 		log.Print("Waiting for new message...")
@@ -85,6 +84,8 @@ func HandleCommunication() {
 					elu := bullyImpl.GetElu()
 					fmt.Println("L'elu de l'election initiale est le processus: " +
 						strconv.Itoa(elu))
+
+					go sendPing(pingResponse)
 				}
 
 				/*

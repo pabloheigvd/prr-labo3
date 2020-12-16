@@ -103,7 +103,7 @@ func (b *BullyImpl) Demarre() {
 	moiP := b.processes[moi]
 	moiP.EnvoiMessage(b.processes)
 
-	// timer enclenché dans Communication.go
+	// timer enclenché dans BullyChannelLoop.go
 }
 
 // GetElu retourne le processus élu lors de la dernière élection
