@@ -63,7 +63,7 @@ func handlePing(pId string) {
 	}
 	pingingProcess := bullyImpl.GetProcess(pingingProcessId)
 
-	pingingProcess.Pong()
+	pingingProcess.Pong() // assumes this process is the coordinator
 }
 
 // handlePong

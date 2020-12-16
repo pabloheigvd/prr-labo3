@@ -42,6 +42,7 @@ func HandleCommunication() {
 	pingResponseMaxDelay := electionDuration
 	log.Print("Election results are known after " + electionDuration.String())
 
+	bullyImpl.RestrictParticipation()
 	/*
 	 * By default sends and receives block until both the sender and receiver are ready
 	 * source: https://gobyexample.com/channels
@@ -49,9 +50,9 @@ func HandleCommunication() {
 	go func() { electionChannel <- struct{}{} }()
 
 	for {
-		log.Print("Waiting for new message...")
 		select {
 			case <- electionChannel:
+				log.Print("election channel received a msg")
 				go func() {
 					bullyImpl.WaitUntilElectionIsOver()
 					stopPinging()
@@ -61,6 +62,7 @@ func HandleCommunication() {
 				}()
 				break
 			case <- getEluChannel:
+				log.Print("getElu channel received a msg")
 				go func() {
 					bullyImpl.WaitUntilElectionIsOver()
 					log.Print("L'utilisateur veut connaitre l'elu")
@@ -71,9 +73,15 @@ func HandleCommunication() {
 				}()
 				break
 			case msg := <- messageChannel:
-				handleRemoteMessage(msg)
+				log.Print("msg channel received a msg")
+				if bullyImpl.IsParticipating() {
+					handleRemoteMessage(msg)
+				} else {
+					log.Print("Message was rejected because process does not participate in the election")
+				}
 				break
 			case <- timeoutChannel: // timeout
+				log.Print("timeout channel received a msg")
 				// "When the Timer expires, the current time will be sent on C"
 				// source: https://golang.org/pkg/time/#Timer
 				log.Print("Timeout! Fin de l'election")

@@ -17,6 +17,7 @@ type BullyImpl struct {
 	election  			Election
 	processes 			[]Process
 	isCoordinatorAlive 	bool
+	participating		bool
 }
 
 const SLEEP_CYCLE_DURATION = 50 * time.Millisecond
@@ -38,6 +39,7 @@ func (b *BullyImpl) InitBully (el Election, ps []Process){
 
 	b.election = el
 	b.processes = ps
+	b.participating = false
 }
 
 // Implementation implicite de l'interface Bully
@@ -119,12 +121,17 @@ func (b BullyImpl) GetElu() int {
 // WaitUntilElectionIsOver bloquer jusqu'à ce que l'élection se termine
 func (b *BullyImpl) WaitUntilElectionIsOver(){
 	// attente active
-	// note: est-ce qu'il ne vaut mieux pas attendre sur un channel?
+	// TODO est-ce qu'il ne vaut mieux pas attendre sur un channel?
 	cycles := 0
-	for b.election.EnCours {
+	oldParticipating := b.participating
+	for !b.participating || b.election.EnCours {
 		cycles++
 		time.Sleep(SLEEP_CYCLE_DURATION) // ne pas tuer la machine
-		log.Print("wait cycle " + strconv.Itoa(cycles))
+
+		if !oldParticipating && oldParticipating != b.participating {
+			log.Print("Process can now participate")
+			b.election.EnCours = false
+		}
 	}
 	waitingTime := time.Duration(cycles) * SLEEP_CYCLE_DURATION
 	log.Print("Wait time: " + waitingTime.String())
@@ -159,6 +166,22 @@ func (b BullyImpl) GetMoi() Process {
 // GetProcess
 func (b *BullyImpl) GetProcess(id int) Process {
 	return b.processes[id]
+}
+
+// RestrictParticipation for one election
+func (b *BullyImpl) RestrictParticipation() {
+	b.participating = false
+	// limite -> election lancee presque au démarrage, ne réponds pas avant 3 t
+	time.AfterFunc(3*b.election.T, func() {
+		b.participating = true
+		log.Print("End of Election participation restriction")
+	},
+	)
+}
+
+// IsParticipating = vrai si le processus peut participer
+func (b BullyImpl) IsParticipating() bool {
+	return b.participating
 }
 
 ///* ===============
