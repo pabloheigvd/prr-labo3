@@ -1,4 +1,4 @@
-# Labo 3
+# Laboratoire 3
 
 La durée de transmission T est défini := 1.5s
 # Test
